@@ -1,6 +1,6 @@
 V = '5.21'
 
-group_token = '29144f3bfae45b42f41bfedd44bec54494c749aab2ddad6387283c2945c5ba86e93e8668c1ea591270af1'
+group_token = 'токен_группы'
 
-user_token = '7d9f85ad00e6a64541b8fc43aec68bbeaf4072bab3bda1e612668526236c3ae0623137f63c84c12a1fedd'
+user_token = 'токен_пользователя'
 
