@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker, relationship
 
 Base = declarative_base()
 
-engine = sq.create_engine('postgresql+psycopg2://graduate_user:1345685Aa@localhost:5432/graduate_db',
+engine = sq.create_engine('postgresql+psycopg2://имя_пользователя:пароль@хост:порт/название_бд',
                           client_encoding='utf8')
 Session = sessionmaker(bind=engine)
 
