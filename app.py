@@ -39,7 +39,6 @@ if __name__ == '__main__':
                             if event.to_me:
                                 request = event.text
                                 if request.lower() == 'да':
-                                    user_token = request[3:len(request)]
                                     write_msg(event.user_id, 'Вы прошли регистрацию.')
                                     write_msg(event.user_id,
                                               f"Для поиска - девушка 18-25 Москва\n"
