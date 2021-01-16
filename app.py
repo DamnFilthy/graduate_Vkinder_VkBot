@@ -133,6 +133,9 @@ if __name__ == '__main__':
                 elif msg_text[0:7].lower() == 'мужчина':
                     sex = 2
                 age_at = msg_text[8:10]
+                if int(age_at) < 18:
+                    write_msg(user_id, 'ай ай ай, Выставлен минимальный возраст - 18 лет.')
+                    age_to = 18
                 age_to = msg_text[11:14]
                 if int(age_to) >= 100:
                     write_msg(user_id, 'Некрофил да? выставлено максимальное значение 99 лет.')
