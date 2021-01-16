@@ -3,12 +3,7 @@ import json
 import datetime
 from vk_api.longpoll import VkLongPoll, VkEventType
 from vk_config import group_token, user_token, V
-from random import randrange
 from vk_api.exceptions import ApiError
-import requests
-import sqlalchemy as sq
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
 from models import engine, Base, Session, User, DatingUser, Photos, BlackList
 from sqlalchemy.exc import IntegrityError, InvalidRequestError
 
@@ -94,15 +89,6 @@ def sort_likes(photos):
     return sorted(result)
 
 
-# Пишет сообщение пользователю
-def write_msg(user_id, message, attachment=None):
-    vk.method('messages.send',
-              {'user_id': user_id,
-               'message': message,
-               'random_id': randrange(10 ** 7),
-               'attachment': attachment})
-
-
 # JSON file create with result of programm
 def json_create(lst):
     today = datetime.date.today()
@@ -123,84 +109,4 @@ def json_create(lst):
     print(f'Информация о загруженных файлах успешно записана в json файл.')
 
 
-""" 
-ФУНКЦИИ РАБОТЫ С БД
-"""
 
-
-# Регистрация пользователя
-def register_user(vk_id):
-    try:
-        new_user = User(
-            vk_id=vk_id
-        )
-        session.add(new_user)
-        session.commit()
-        return True
-    except (IntegrityError, InvalidRequestError):
-        return False
-
-
-# Сохранение выбранного пользователя в БД
-def add_user(event_id, vk_id, first_name, second_name, city, link, id_user):
-    try:
-        new_user = DatingUser(
-            vk_id=vk_id,
-            first_name=first_name,
-            second_name=second_name,
-            city=city,
-            link=link,
-            id_user=id_user
-        )
-        session.add(new_user)
-        session.commit()
-        write_msg(event_id,
-                  'ПОЛЬЗОВАТЕЛЬ УСПЕШНО ДОБАВЛЕН В ИЗБРАННОЕ')
-        return True
-    except (IntegrityError, InvalidRequestError):
-        write_msg(event_id,
-                  'Пользователь уже в избранном.')
-        return False
-
-
-# Сохранение в БД фото добавленного пользователя
-def add_user_photos(event_id, link_photo, count_likes, id_dating_user):
-    try:
-        new_user = Photos(
-            link_photo=link_photo,
-            count_likes=count_likes,
-            id_dating_user=id_dating_user
-        )
-        session.add(new_user)
-        session.commit()
-        write_msg(event_id,
-                  'Фото пользователя сохранено в избранном')
-        return True
-    except (IntegrityError, InvalidRequestError):
-        write_msg(event_id,
-                  'Невозможно добавить фото этого пользователя(Уже сохранено)')
-        return False
-
-
-# Добавление пользователя в черный список
-def add_to_black_list(event_id, vk_id, first_name, second_name, city, link, link_photo, count_likes, id_user):
-    try:
-        new_user = BlackList(
-            vk_id=vk_id,
-            first_name=first_name,
-            second_name=second_name,
-            city=city,
-            link=link,
-            link_photo=link_photo,
-            count_likes=count_likes,
-            id_user=id_user
-        )
-        session.add(new_user)
-        session.commit()
-        write_msg(event_id,
-                  'Пользователь успешно заблокирован.')
-        return True
-    except (IntegrityError, InvalidRequestError):
-        write_msg(event_id,
-                  'Пользователь уже в черном списке.')
-        return False
