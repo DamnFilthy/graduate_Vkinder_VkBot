@@ -2,7 +2,7 @@ import vk_api
 from vk_api.longpoll import VkLongPoll, VkEventType
 from vk_functions import search_users, get_photo, sort_likes, json_create
 from models import engine, Session, write_msg, register_user, add_user, add_user_photos, add_to_black_list, \
-    check_db_user, check_db_black, check_db_favorites, check_db_master
+    check_db_user, check_db_black, check_db_favorites, check_db_master, delete_db_blacklist, delete_db_favorites
 from vk_config import group_token
 
 # Для работы с вк_апи
@@ -60,8 +60,7 @@ def go_to_favorites(ids):
                                     f'Vkinder - вернуться в меню\n')
         # Удаляем запись из бд - избранное
         elif msg_texts == '1':
-            session.delete(users)
-            session.commit()
+            delete_db_favorites(users.vk_id)
             write_msg(user_ids, f'Анкета успешно удалена.')
             if nums >= len(alls_users) - 1:
                 write_msg(user_ids, f'Это была последняя анкета.\n'
@@ -84,8 +83,8 @@ def go_to_blacklist(ids):
                                     f'Vkinder - вернуться в меню\n')
         # Удаляем запись из бд - черный список
         elif msg_texts == '1':
-            session.delete(user)
-            session.commit()
+            print(user.id)
+            delete_db_blacklist(user.vk_id)
             write_msg(user_ids, f'Анкета успешно удалена')
             if num >= len(all_users) - 1:
                 write_msg(user_ids, f'Это была последняя анкета.\n'

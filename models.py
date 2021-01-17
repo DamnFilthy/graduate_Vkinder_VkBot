@@ -9,6 +9,7 @@ from sqlalchemy.exc import IntegrityError, InvalidRequestError
 
 # Подключение к БД
 Base = declarative_base()
+
 engine = sq.create_engine('',
                           client_encoding='utf8')
 Session = sessionmaker(bind=engine)
@@ -66,6 +67,20 @@ class BlackList(Base):
 """ 
 ФУНКЦИИ РАБОТЫ С БД
 """
+
+
+# Удаляет пользователя из черного списка
+def delete_db_blacklist(ids):
+    current_user = session.query(BlackList).filter_by(vk_id=ids).first()
+    session.delete(current_user)
+    session.commit()
+
+
+# Удаляет пользователя из избранного
+def delete_db_favorites(ids):
+    current_user = session.query(DatingUser).filter_by(vk_id=ids).first()
+    session.delete(current_user)
+    session.commit()
 
 
 # проверят зареган ли пользователь бота в БД
