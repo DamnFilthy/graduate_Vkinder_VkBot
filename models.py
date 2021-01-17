@@ -10,6 +10,7 @@ from sqlalchemy.exc import IntegrityError, InvalidRequestError
 # Подключение к БД
 Base = declarative_base()
 
+
 engine = sq.create_engine('',
                           client_encoding='utf8')
 Session = sessionmaker(bind=engine)
