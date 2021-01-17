@@ -1,6 +1,6 @@
 V = '5.21'
 
-group_token = 'групповой токен'
+group_token = ''
 
-user_token = 'ваш токен'
+user_token = ''
 

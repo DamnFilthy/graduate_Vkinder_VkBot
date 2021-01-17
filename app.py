@@ -1,8 +1,8 @@
 import vk_api
 from vk_api.longpoll import VkLongPoll, VkEventType
-from models import engine, Session, User, DatingUser, Photos, BlackList
 from vk_functions import search_users, get_photo, sort_likes, json_create
-from models import write_msg, register_user, add_user, add_user_photos, add_to_black_list
+from models import engine, Session, write_msg, register_user, add_user, add_user_photos, add_to_black_list, \
+    check_db_user, check_db_black, check_db_favorites, check_db_master
 from vk_config import group_token
 
 # Для работы с вк_апи
@@ -13,7 +13,6 @@ session = Session()
 connection = engine.connect()
 
 
-# Ожидание пользовательского ввода
 def loop_bot():
     for this_event in longpoll.listen():
         if this_event.type == VkEventType.MESSAGE_NEW:
@@ -22,7 +21,6 @@ def loop_bot():
                 return message_text, this_event.user_id
 
 
-# Menu Bot
 def menu_bot(id_num):
     write_msg(id_num,
               f"Вас приветствует бот - Vkinder\n"
@@ -34,7 +32,6 @@ def menu_bot(id_num):
               f"Перейти в черный список - 0\n")
 
 
-# Show info
 def show_info():
     write_msg(user_id, f'Это была последняя анкета.'
                        f'Перейти в избранное - 2'
@@ -43,7 +40,6 @@ def show_info():
                        f'Меню бота - Vkinder')
 
 
-# Register new user
 def reg_new_user(id_num):
     write_msg(id_num, 'Вы прошли регистрацию.')
     write_msg(id_num,
@@ -51,18 +47,12 @@ def reg_new_user(id_num):
     register_user(id_num)
 
 
-# Work with favorites in DB
 def go_to_favorites(ids):
-    # Получаем данные по юзеру который работает с ботом
-    vk_ids = ids
-    current_users_id = session.query(User).filter_by(vk_id=vk_ids).first()
-    # Находим все анкеты из избранного которые добавил данный юзер
-    alls_users = session.query(DatingUser).filter_by(id_user=current_users_id.id).all()
+    alls_users = check_db_favorites(ids)
     write_msg(ids, f'Избранные анкеты:')
     for nums, users in enumerate(alls_users):
         write_msg(ids, f'{users.first_name}, {users.second_name}, {users.link}')
         write_msg(ids, '1 - Удалить из избранного, 0 - Далее \nq - Выход')
-        # Принимает ответ пользователя
         msg_texts, user_ids = loop_bot()
         if msg_text == '0':
             if nums >= len(alls_users) - 1:
@@ -76,24 +66,17 @@ def go_to_favorites(ids):
             if nums >= len(alls_users) - 1:
                 write_msg(user_ids, f'Это была последняя анкета.\n'
                                     f'Vkinder - вернуться в меню\n')
-        # Выход
         elif msg_texts.lower() == 'q':
             write_msg(ids, 'Vkinder - для активации бота.')
             break
 
 
-# Work with blacklist in DB
 def go_to_blacklist(ids):
-    # Получаем данные по юзеру который работает с ботом
-    vk_ids = ids
-    current_users_id = session.query(User).filter_by(vk_id=vk_ids).first()
-    # Находим все анкеты из избранного которые добавил данный юзер
-    all_users = session.query(BlackList).filter_by(id_user=current_users_id.id).all()
+    all_users = check_db_black(ids)
     write_msg(ids, f'Анкеты в черном списке:')
     for num, user in enumerate(all_users):
         write_msg(ids, f'{user.first_name}, {user.second_name}, {user.link}')
         write_msg(ids, '1 - Удалить из черного списка, 0 - Далее \nq - Выход')
-        # Получаем ответ пользователя
         msg_texts, user_ids = loop_bot()
         if msg_texts == '0':
             if num >= len(all_users) - 1:
@@ -107,7 +90,6 @@ def go_to_blacklist(ids):
             if num >= len(all_users) - 1:
                 write_msg(user_ids, f'Это была последняя анкета.\n'
                                     f'Vkinder - вернуться в меню\n')
-        # Выход
         elif msg_texts.lower() == 'q':
             write_msg(ids, 'Vkinder - для активации бота.')
             break
@@ -115,12 +97,9 @@ def go_to_blacklist(ids):
 
 if __name__ == '__main__':
     while True:
-        # Ждем пользовательский ввод
         msg_text, user_id = loop_bot()
-        # Меню бота
         if msg_text == "vkinder":
             menu_bot(user_id)
-            # Ждем пользовательский ввод
             msg_text, user_id = loop_bot()
             # Регистрируем пользователя в БД
             if msg_text.lower() == 'да':
@@ -135,7 +114,7 @@ if __name__ == '__main__':
                 age_at = msg_text[8:10]
                 if int(age_at) < 18:
                     write_msg(user_id, 'ай ай ай, Выставлен минимальный возраст - 18 лет.')
-                    age_to = 18
+                    age_at = 18
                 age_to = msg_text[11:14]
                 if int(age_to) >= 100:
                     write_msg(user_id, 'Некрофил да? выставлено максимальное значение 99 лет.')
@@ -143,22 +122,14 @@ if __name__ == '__main__':
                 city = msg_text[14:len(msg_text)].lower()
                 # Ищем анкеты
                 result = search_users(sex, int(age_at), int(age_to), city)
-                # Создаем json с результатами
                 json_create(result)
-                # Получаем данные по юзеру который работает с ботом
-                vk_id = user_id
-                current_user_id = session.query(User).filter_by(vk_id=vk_id).first()
+                current_user_id = check_db_master(user_id)
                 # Производим отбор анкет
                 for i in range(len(result)):
-                    # Проверяем есть ли в БД
-                    id_this_dt_user = result[i][3]
-                    this_dt_user = session.query(DatingUser).filter_by(
-                        vk_id=id_this_dt_user).first()
-                    blocked_user = session.query(BlackList).filter_by(
-                        vk_id=id_this_dt_user).first()
+                    dating_user, blocked_user = check_db_user(result[i][3])
                     # Получаем фото и сортируем по лайкам
                     user_photo = get_photo(result[i][3])
-                    if user_photo == 'нет доступа к фото' or this_dt_user is not None or blocked_user is not None:
+                    if user_photo == 'нет доступа к фото' or dating_user is not None or blocked_user is not None:
                         continue
                     sorted_user_photo = sort_likes(user_photo)
                     # Выводим отсортированные данные по анкетам

@@ -9,7 +9,7 @@ from sqlalchemy.exc import IntegrityError, InvalidRequestError
 
 # Подключение к БД
 Base = declarative_base()
-engine = sq.create_engine('postgresql+psycopg2://пользователь:пароль@хост:номер_порта/название_бд',
+engine = sq.create_engine('',
                           client_encoding='utf8')
 Session = sessionmaker(bind=engine)
 
@@ -66,6 +66,37 @@ class BlackList(Base):
 """ 
 ФУНКЦИИ РАБОТЫ С БД
 """
+
+
+# проверят зареган ли пользователь бота в БД
+def check_db_master(ids):
+    current_user_id = session.query(User).filter_by(vk_id=ids).first()
+    return current_user_id
+
+
+# проверят есть ли юзер в бд
+def check_db_user(ids):
+    dating_user = session.query(DatingUser).filter_by(
+        vk_id=ids).first()
+    blocked_user = session.query(BlackList).filter_by(
+        vk_id=ids).first()
+    return dating_user, blocked_user
+
+
+# Проверят есть ли юзер в черном списке
+def check_db_black(ids):
+    current_users_id = session.query(User).filter_by(vk_id=ids).first()
+    # Находим все анкеты из избранного которые добавил данный юзер
+    all_users = session.query(BlackList).filter_by(id_user=current_users_id.id).all()
+    return all_users
+
+
+# Проверяет есть ли юзер в избранном
+def check_db_favorites(ids):
+    current_users_id = session.query(User).filter_by(vk_id=ids).first()
+    # Находим все анкеты из избранного которые добавил данный юзер
+    alls_users = session.query(DatingUser).filter_by(id_user=current_users_id.id).all()
+    return alls_users
 
 
 # Пишет сообщение пользователю
